@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Android Mod Host · 系统工具箱</title>
+  
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <!-- 自定义样式 -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: '#165DFF', neutral: '#F7F8FA' },
+          boxShadow: { modal: '0 20px 60px rgba(0,0,0,0.08)' }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-[#F7F8FA] font-sans text-gray-800 m-0" data-language="zh">
+
+<!-- ==================== 全局组件 ==================== -->
+
+<!-- 毛玻璃遮罩层 -->
+<div class="full-glass-overlay" id="fullGlassOverlay"></div>
+
+<!-- 通用遮罩层 -->
+<div class="overlay" id="overlay"></div>
+
+<!-- 用户协议模态框 -->
+<div id="userAgreementModal" class="center-modal">
+  <div class="text-center mb-4"><div class="text-lg font-bold text-primary" data-i18n="userAgreementTitle">用户使用协议</div></div>
+  <div class="text-sm text-gray-600 mb-6 h-48 overflow-y-auto px-1" data-i18n-html="userAgreementContent">
+    本工具为免费、开源、面向技术研究的系统工具，仅限合法设备、个人学习与技术调试使用。<br><br>
+    1. 用户必须拥有设备的完整所有权与合法使用权，不得用于非法破解、恶意修改他人设备、破坏系统安全、窃取数据等违法违规行为。<br>
+    2. 本工具涉及 Root、分区读写、内核解包、重启、Bootloader 操作、ARB 检测等高风险操作，可能导致设备变砖、数据丢失、失去官方保修、系统异常。<br>
+    3. 所有操作均由用户主动触发，风险完全由用户自行承担，开发者不对任何设备损坏、数据丢失、法律纠纷承担责任。<br>
+    4. 禁止用于商业用途、二次分发、反向工程、去除版权信息、倒卖工具等侵权行为。<br>
+    5. 用户需具备基本的 Android、Shell、ADB、Magisk、分区结构等知识，因操作不当造成的一切后果由用户自行负责。<br>
+    6. 本工具仅从 GitHub 下载必要文件，无后台上传数据、无隐私窃取、无恶意行为。
+  </div>
+  <button id="closeUserAgreement" class="w-full bg-primary text-white py-2.5 rounded-xl" data-i18n="confirm">确定</button>
+</div>
+
+<!-- 隐私协议模态框 -->
+<div id="privacyAgreementModal" class="center-modal">
+  <div class="text-center mb-4"><div class="text-lg font-bold text-primary" data-i18n="privacyAgreementTitle">隐私服务协议</div></div>
+  <div class="text-sm text-gray-600 mb-6 h-48 overflow-y-auto px-1" data-i18n-html="privacyAgreementContent">
+    本工具严格保护用户隐私，遵循最小必要、本地优先原则：<br><br>
+    1. 本工具所有功能均在本地执行，不会上传任何设备信息、个人数据、文件内容、操作记录至远程服务器。<br>
+    2. 工具仅访问系统分区、boot 镜像、xbl_config 等与功能相关的路径，不读取通讯录、短信、相册、位置、账号等隐私数据。<br>
+    3. 工具仅在用户主动触发时从 GitHub 下载工具文件，无额外网络行为。<br>
+    4. 工具不收集、不存储、不共享任何可识别用户个人的信息。<br>
+    5. 卸载/删除工具后，本地产生的临时文件由用户自行清理。
+  </div>
+  <button id="closePrivacyAgreement" class="w-full bg-primary text-white py-2.5 rounded-xl" data-i18n="confirm">确定</button>
+</div>
+
+<!-- 同意确认模态框 -->
+<div id="agreeModal" class="center-modal">
+  <div class="text-center mb-4"><div class="text-lg font-bold" data-i18n="userNotice">用户须知</div></div>
+  <div class="text-sm text-gray-600 mb-5" data-i18n="riskWarning">本功能涉及系统深度操作，可能影响设备安全与稳定性。</div>
+  <div class="flex justify-between mb-4">
+    <span class="protocol-link" id="openUserAgreement" data-i18n="userAgreement">用户使用协议</span>
+    <span class="protocol-link" id="openPrivacyAgreement" data-i18n="privacyAgreement">隐私服务协议</span>
+  </div>
+  <div class="grid grid-cols-2 gap-3">
+    <button id="agreeBtn" class="bg-green-500 text-white py-2 rounded-xl text-sm" data-i18n="agree">同意</button>
+    <button id="disagreeBtn" class="bg-red-500 text-white py-2 rounded-xl text-sm" data-i18n="cancel">取消</button>
+  </div>
+</div>
+
+<!-- 提示模态框 -->
+<div id="simpleTipModal" class="center-modal">
+  <div class="text-center mb-4"><div class="text-lg font-bold text-primary" data-i18n="tip">提示</div></div>
+  <div class="text-center mb-6" data-i18n="agreedAndUnlocked">已同意协议，功能已解锁</div>
+  <button id="closeSimpleTip" class="w-full bg-primary text-white py-2.5 rounded-xl" data-i18n="confirm">确定</button>
+</div>
+
+<!-- Root管理器子菜单模态框 -->
+<div id="subFuncCenterModal" class="center-modal">
+  <div class="text-center mb-5">
+    <div class="text-lg font-bold text-primary" data-i18n="rootManagerTitle">Root 管理器</div>
+  </div>
+  <div class="grid grid-cols-1 gap-3">
+    <div class="stack-card p-5 h-16 flex items-center justify-center clickable-card" id="downloadAlpha" data-i18n="alpha">Alpha</div>
+    <div class="stack-card p-5 h-16 flex items-center justify-center clickable-card" id="downloadResuSu" data-i18n="resukisu">Resukisu</div>
+    <div class="stack-card p-5 h-16 flex items-center justify-center clickable-card" id="downloadKernelSU" data-i18n="kernelsu">KernelSU</div>
+    <div class="stack-card p-5 h-16 flex items-center justify-center clickable-card" id="downloadSukisu" data-i18n="sukisu">Sukisu</div>
+  </div>
+  <div class="mt-4 text-center">
+    <button id="closeSubFuncCenter" class="px-6 py-2.5 text-sm text-gray-600 border border-gray-300 rounded-xl" data-i18n="close">关闭</button>
+  </div>
+</div>
+
+<!-- 设置弹窗 -->
+<div id="settingModal" class="modal-base glass-modal modal-hide">
+  <div class="text-center mb-5">
+    <div class="text-lg font-bold text-primary" data-i18n="settings">设置</div>
+  </div>
+  <div class="space-y-2">
+    <div class="setting-item" id="gotoLayout">
+      <div class="flex items-center gap-3">
+        <i class="fa fa-th-large text-primary"></i>
+        <span data-i18n="uiSettings">界面设置</span>
+      </div>
+      <i class="fa fa-angle-right text-gray-400"></i>
+    </div>
+    <div class="setting-item" id="gotoLanguage">
+      <div class="flex items-center gap-3">
+        <i class="fa fa-language text-primary"></i>
+        <span data-i18n="languageSettings">语言设置</span>
+      </div>
+      <i class="fa fa-angle-right text-gray-400"></i>
+    </div>
+  </div>
+  <div class="mt-4 text-center">
+    <button id="closeSetting" class="px-6 py-2 border border-gray-300 rounded-xl" data-i18n="close">关闭</button>
+  </div>
+</div>
+
+<!-- 界面设置弹窗 -->
+<div id="layoutModal" class="modal-base glass-modal modal-hide">
+  <div class="text-center mb-5">
+    <div class="text-lg font-bold text-primary" data-i18n="uiSettings">界面设置</div>
+  </div>
+  <div class="grid grid-cols-2 gap-4 mb-5">
+    <button id="setPhone" class="p-4 stack-card hover:bg-primary/5">
+      <i class="fa fa-mobile text-primary"></i>
+      <div class="text-sm mt-1" data-i18n="phoneMode">手机模式</div>
+    </button>
+    <button id="setPad" class="p-4 stack-card hover:bg-primary/5">
+      <i class="fa fa-tablet text-primary"></i>
+      <div class="text-sm mt-1" data-i18n="tabletMode">平板模式</div>
+    </button>
+  </div>
+  <div class="flex gap-3 justify-center">
+    <button id="clearMemory" class="px-5 py-2.5 text-sm text-red-500 border border-red-200 rounded-xl hover:bg-red-50" data-i18n="clearMemory">清除记忆</button>
+    <button id="backFromLayout" class="px-6 py-2.5 text-sm text-gray-600 border border-gray-300 rounded-xl" data-i18n="back">返回</button>
+  </div>
+</div>
+
+<!-- 语言设置弹窗 -->
+<div id="languageModal" class="center-modal">
+  <div class="text-center mb-5">
+    <div class="text-lg font-bold text-primary" data-i18n="languageSettings">语言设置</div>
+  </div>
+  <div class="space-y-2 max-h-[400px] overflow-y-auto px-1">
+    <div class="lang-item active" data-lang="zh">
+      <div class="flex items-center gap-3">
+        <i class="fa fa-check-circle text-primary"></i>
+        <span>简体中文</span>
+      </div>
+      <span class="text-sm text-gray-400">ch.xml</span>
+    </div>
+    <div class="lang-item" data-lang="tw">
+      <div class="flex items-center gap-3">
+        <i class="fa fa-circle-o text-gray-300"></i>
+        <span>繁體中文</span>
+      </div>
+      <span class="text-sm text-gray-400">tw.xml</span>
+    </div>
+    <div class="lang-item" data-lang="en">
+      <div class="flex items-center gap-3">
+        <i class="fa fa-circle-o text-gray-300"></i>
+        <span>English</span>
+      </div>
+      <span class="text-sm text-gray-400">en.xml</span>
+    </div>
+    <div class="lang-item" data-lang="ru">
+      <div class="flex items-center gap-3">
+        <i class="fa fa-circle-o text-gray-300"></i>
+        <span>Русский</span>
+      </div>
+      <span class="text-sm text-gray-400">ru.xml</span>
+    </div>
+    <div class="lang-item" data-lang="fr">
+      <div class="flex items-center gap-3">
+        <i class="fa fa-circle-o text-gray-300"></i>
+        <span>Français</span>
+      </div>
+      <span class="text-sm text-gray-400">fr.xml</span>
+    </div>
+    <div class="lang-item" data-lang="de">
+      <div class="flex items-center gap-3">
+        <i class="fa fa-circle-o text-gray-300"></i>
+        <span>Deutsch</span>
+      </div>
+      <span class="text-sm text-gray-400">de.xml</span>
+    </div>
+    <div class="lang-item" data-lang="ja">
+      <div class="flex items-center gap-3">
+        <i class="fa fa-circle-o text-gray-300"></i>
+        <span>日本語</span>
+      </div>
+      <span class="text-sm text-gray-400">ja.xml</span>
+    </div>
+  </div>
+  <div class="mt-5 text-center">
+    <button id="backFromLanguage" class="px-6 py-2.5 text-sm text-gray-600 border border-gray-300 rounded-xl" data-i18n="back">返回</button>
+  </div>
+</div>
+
+<!-- 系统工具弹窗 -->
+<div id="systemModal" class="modal-base glass-modal modal-hide">
+  <div class="text-center mb-5">
+    <div class="text-lg font-bold text-primary" data-i18n="systemTools">系统工具</div>
+  </div>
+  <div class="grid grid-cols-2 gap-3">
+    <div class="stack-card p-5 h-20 flex items-center justify-center clickable-card sys-cmd" data-cmd="reboot" data-i18n="reboot">重启系统</div>
+    <div class="stack-card p-5 h-20 flex items-center justify-center clickable-card sys-cmd" data-cmd="reboot bootloader" data-i18n="rebootFastboot">重启到 Fastboot</div>
+    <div class="stack-card p-5 h-20 flex items-center justify-center clickable-card sys-cmd" data-cmd="reboot fastboot" data-i18n="rebootFastbootD">重启到 FastbootD</div>
+    <div class="stack-card p-5 h-20 flex items-center justify-center clickable-card sys-cmd" data-cmd="reboot recovery" data-i18n="rebootRecovery">重启到 Recovery</div>
+    <div class="stack-card p-5 h-20 flex items-center justify-center clickable-card sys-cmd" data-cmd="reboot edl" data-i18n="rebootEDL">重启到 EDL</div>
+    <div class="stack-card p-5 h-20 flex items-center justify-center clickable-card sys-cmd" data-cmd="reboot -p" data-i18n="shutdown">关机</div>
+  </div>
+  <div class="mt-4 text-center">
+    <button id="closeSystem" class="px-6 py-2.5 text-sm text-gray-600 border border-gray-300 rounded-xl" data-i18n="close">关闭</button>
+  </div>
+</div>
+
+<!-- 布局模式选择（初始弹窗） -->
+<div id="modeModal" class="modal-base stack-card">
+  <div class="text-center mb-5">
+    <div class="text-lg font-bold text-primary" data-i18n="selectLayout">选择布局模式</div>
+  </div>
+  <div class="grid grid-cols-2 gap-4 mb-5">
+    <button id="phoneBtn" class="p-4 stack-card hover:bg-primary/5">
+      <i class="fa fa-mobile text-xl text-primary"></i>
+      <div class="text-sm font-medium mt-2" data-i18n="phoneMode">手机模式</div>
+    </button>
+    <button id="padBtn" class="p-4 stack-card hover:bg-primary/5">
+      <i class="fa fa-tablet text-xl text-primary"></i>
+      <div class="text-sm font-medium mt-2" data-i18n="tabletMode">平板模式</div>
+    </button>
+  </div>
+  <div class="flex justify-end items-center gap-2 text-sm text-gray-500">
+    <input type="checkbox" id="remember" class="w-4 h-4 rounded border border-gray-300">
+    <label for="remember" data-i18n="autoRemember">自动记忆</label>
+  </div>
+</div>
+
+<!-- ==================== 主屏幕 ==================== -->
+<div id="home" class="min-h-screen flex flex-col items-center px-5 py-16 opacity-0 transition-opacity duration-500">
+  <div class="w-full max-w-2xl mb-3 flex justify-end gap-2">
+    <button id="systemBtn" class="px-3 h-10 stack-card text-sm text-gray-600 hover:text-primary" data-i18n="system">System</button>
+    <button id="settingBtn" class="w-10 h-10 rounded-full stack-card text-gray-500 hover:text-primary">
+      <i class="fa fa-cog"></i>
+    </button>
+  </div>
+  <div class="w-full max-w-2xl stack-card p-8">
+    <div class="text-xl font-semibold mb-4 text-primary" data-i18n="noticeBoard">公告栏</div>
+    <div class="h-40 flex items-center justify-center text-gray-400" data-i18n="noticeContent">公告内容区域</div>
+    <div class="mt-8 flex justify-center">
+      <button id="openFuncBtn" class="px-6 py-3 bg-primary text-white rounded-xl shadow-sm hover:shadow-md" data-i18n="enterFuncPage">进入功能页面</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 功能页面 ==================== -->
+<div class="page-slide" id="funcPage">
+  <div class="h-full flex flex-col">
+    <div class="flex-1 overflow-auto px-5 pt-12 pb-20 max-w-3xl mx-auto w-full">
+      <!-- 页面1：大功能 -->
+      <div class="page-content active" id="page1">
+        <div class="flex justify-between items-center mb-8">
+          <h2 class="text-xl font-bold" data-i18n="funcCenter">功能中心</h2>
+          <div class="flex items-center gap-2">
+            <button id="toolCompleteBtn" class="tool-button">
+              <i class="fa fa-github mr-1"></i><span data-i18n="toolComplete">工具补全</span>
+            </button>
+            <button id="closeFunc" class="w-10 h-10 rounded-full stack-card flex items-center justify-center text-gray-500 border border-gray-200">
+              <i class="fa fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div class="stack-card p-8 h-32 flex items-center justify-center clickable-card" id="bigFunc1" data-i18n="getRootManager">获取Root管理器</div>
+          <div class="stack-card p-8 h-32 flex items-center justify-center clickable-card func-trigger-2" data-i18n="parseKernel">解析内核信息</div>
+          <div class="stack-card p-8 h-32 flex items-center justify-center clickable-card func-trigger-3" data-i18n="checkARB">检测设备熔断情况</div>
+        </div>
+      </div>
+
+      <!-- 页面2：工具集 -->
+      <div class="page-content" id="page2">
+        <div class="flex justify-between items-center mb-8">
+          <h2 class="text-xl font-bold" data-i18n="funcCenter">功能中心</h2>
+          <button id="closeFunc2" class="w-10 h-10 rounded-full stack-card flex items-center justify-center text-gray-500 border border-gray-200">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div class="stack-card p-8 h-32 flex items-center justify-center text-gray-500" data-i18n="toolA">工具 A</div>
+          <div class="stack-card p-8 h-32 flex items-center justify-center text-gray-500" data-i18n="toolB">工具 B</div>
+          <div class="stack-card p-8 h-32 flex items-center justify-center text-gray-500" data-i18n="toolC">工具 C</div>
+          <div class="stack-card p-8 h-32 flex items-center justify-center text-gray-500" data-i18n="toolD">工具 D</div>
+          <div class="stack-card p-8 h-32 flex items-center justify-center text-gray-500" data-i18n="toolE">工具 E</div>
+          <div class="stack-card p-8 h-32 flex items-center justify-center text-gray-500" data-i18n="toolF">工具 F</div>
+        </div>
+      </div>
+
+      <!-- 页面3：分区 -->
+      <div class="page-content" id="page3">
+        <div class="flex justify-between items-center mb-8">
+          <h2 class="text-xl font-bold" data-i18n="funcCenter">功能中心</h2>
+          <button id="closeFunc3" class="w-10 h-10 rounded-full stack-card flex items-center justify-center text-gray-500 border border-gray-200">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+        <div class="stack-card w-full h-[70vh] flex items-center justify-center text-gray-400" id="partitionList" data-i18n="partitionPlaceholder">
+          设备分区列表将在此显示
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部胶囊切换 -->
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-white rounded-full p-1 flex shadow-md z-30">
+      <div class="capsule-item active" data-page="page1" data-i18n="func1">功能1</div>
+      <div class="capsule-item" data-page="page2" data-i18n="func2">功能2</div>
+      <div class="capsule-item" data-page="page3" data-i18n="partition">分区</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 脚本加载 ==================== -->
+<script src="js/file-picker.js"></script>
+<script src="js/system.js"></script>
+<script src="js/tool-complete.js"></script>
+<script src="js/root-manager.js"></script>
+<script src="js/kernel-parser.js"></script>
+<script src="js/arb-detector.js"></script>
+<script src="js/main.js"></script>
+
+<!-- 版权信息 -->
+<div class="fixed bottom-1 right-2 text-xs text-gray-400 opacity-50 z-10">OneYi-bro</div>
+
+</body>
+</html>
